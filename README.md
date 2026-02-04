@@ -1,64 +1,99 @@
-# Django Bolt Test
+<p align="center">
+  <a href="https://www.djangoproject.com/" target="_blank">
+    <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" height="28"/>
+  </a>
+  <a href="https://github.com/FarhanAliRaza/django-bolt" target="_blank">
+    <img src="https://img.shields.io/badge/Django__Bolt-0.5.x-0C4A6E?style=for-the-badge&logo=lightning&logoColor=white" alt="Django Bolt" height="28"/>
+  </a>
+  <a href="https://www.python.org/" target="_blank">
+    <img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.13+" height="28"/>
+  </a>
+  <a href="https://github.com/Matnazar-Matnazarov/django-bolt-test/blob/main/LICENSE" target="_blank">
+    <img src="https://img.shields.io/github/license/Matnazar-Matnazarov/django-bolt-test?style=for-the-badge" alt="License" height="28"/>
+  </a>
+</p>
 
-High-performance REST API built with [Django Bolt](https://github.com/FarhanAliRaza/django-bolt)—async Python API framework on top of Django. Professional structure with JWT, pagination, search, permissions, health checks, WebSocket, and tests.
+<h1 align="center">Django Bolt Test</h1>
+
+<p align="center">
+  <strong>High-performance REST API</strong> built with <a href="https://github.com/FarhanAliRaza/django-bolt">Django Bolt</a> — async Python API framework on top of Django.
+</p>
+
+<p align="center">
+  JWT · Pagination · Search · Health checks · WebSocket · OpenAPI/Swagger · Tests
+</p>
+
+---
 
 ## Features
 
-- **JWT authentication**: `POST /auth/login` → token; `GET /users/me` and `POST /users` require JWT
-- **Health checks**: `GET /health` (liveness), `GET /ready` (readiness + DB)
-- **Users API**: list (paginated, search), get by ID, current user (JWT), create (staff only)
-- **Pagination**: `GET /users?page=1&page_size=10` (page-number)
-- **Search**: `GET /users?search=...` (username filter)
-- **Permissions**: `AllowAny` (list, get), `IsAuthenticated` + `IsStaff` (create user)
-- **WebSocket**: `WS /ws` echo (text + JSON)
-- **Server time headers**: `X-Server-Time`, `X-Response-Time` on every response
-- **OpenAPI / Swagger**: `/docs`
-- **Django Admin**: `/admin/`
+| Area | Description |
+|------|-------------|
+| **Auth** | JWT via `POST /auth/login`; `GET /users/me` and `POST /users` require JWT |
+| **Health** | `GET /health` (liveness), `GET /ready` (readiness + DB) |
+| **Users** | List (paginated, `?search=`), get by ID, current user, create (staff only) |
+| **Pagination** | `GET /users?page=1&page_size=10` (page-number) |
+| **Permissions** | `AllowAny` (list, get), `IsAuthenticated` + `IsStaff` (create user) |
+| **WebSocket** | `WS /ws` echo (text + JSON) |
+| **Observability** | `X-Server-Time`, `X-Response-Time` on every response |
+| **Docs** | OpenAPI/Swagger at `/docs`, Django Admin at `/admin/` |
+
+---
 
 ## Tech Stack
 
-- Python 3.13+
-- Django 6.x
-- [django-bolt](https://github.com/FarhanAliRaza/django-bolt) 0.5.x
-- [msgspec](https://github.com/jcrist/msgspec) for schemas
-- [uv](https://github.com/astral-sh/uv) for dependency management
+| Technology | Role |
+|------------|------|
+| [Python](https://www.python.org/) 3.13+ | Runtime |
+| [Django](https://www.djangoproject.com/) 6.x | Web framework |
+| [Django Bolt](https://github.com/FarhanAliRaza/django-bolt) 0.5.x | Async API layer |
+| [msgspec](https://github.com/jcrist/msgspec) | Schemas & serialization |
+| [pytest](https://pytest.org/) | Testing (unit + integration) |
+| [uv](https://github.com/astral-sh/uv) | Dependency management |
+
+---
 
 ## Project Structure
 
 ```
-api/                 # Bolt API package (professional structure)
-  __init__.py        # BoltAPI instance, middleware, register all routes
-  middleware.py      # X-Server-Time, X-Response-Time headers
-  routes/
-    __init__.py      # register_all_routes(api)
-    health.py        # /health, /ready
-    auth.py          # POST /auth/login
-    users.py         # GET/POST /users, /users/me
-    websocket.py     # WS /ws
-config/              # Django project
-  api.py             # Re-export: from api import api (for runbolt autodiscovery)
-  settings.py
-  urls.py            # admin only
-accounts/            # Django app
-  schemas.py         # UserSchema, LoginSchema, TokenSchema, UserCreateSchema
-  admin.py
-  models.py
-tests/               # Pytest: unit + integration (skip if server down)
-  conftest.py        # require_server fixture
-  test_health.py
-  test_auth.py
-  test_users.py
-  test_websocket.py
-  test_schemas.py
-manage.py
-pyproject.toml
-requirements.txt
+django-bolt-test/
+├── api/                      # Bolt API package
+│   ├── __init__.py            # BoltAPI instance, middleware, register routes
+│   ├── middleware.py          # X-Server-Time, X-Response-Time
+│   └── routes/
+│       ├── __init__.py        # register_all_routes(api)
+│       ├── health.py          # /health, /ready
+│       ├── auth.py            # POST /auth/login
+│       ├── users.py           # GET/POST /users, /users/me
+│       └── websocket.py       # WS /ws
+├── config/                    # Django project
+│   ├── api.py                 # Re-export: from api import api
+│   ├── settings.py
+│   └── urls.py                # admin only
+├── accounts/                  # Django app
+│   ├── schemas.py             # UserSchema, LoginSchema, TokenSchema, UserCreateSchema
+│   ├── admin.py
+│   └── models.py
+├── tests/
+│   ├── conftest.py            # require_server fixture
+│   ├── test_health.py
+│   ├── test_auth.py
+│   ├── test_users.py
+│   ├── test_websocket.py
+│   └── test_schemas.py
+├── manage.py
+├── pyproject.toml
+└── requirements.txt
 ```
+
+---
 
 ## Prerequisites
 
-- Python 3.13+
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip
+- **Python** 3.13+
+- **[uv](https://github.com/astral-sh/uv)** (recommended) or pip
+
+---
 
 ## Installation
 
@@ -71,12 +106,16 @@ uv sync
 # or: pip install -r requirements.txt
 ```
 
+---
+
 ## Database
 
 ```bash
 uv run manage.py migrate
-uv run manage.py createsuperuser   # for admin & JWT login tests
+uv run manage.py createsuperuser   # for admin & JWT login
 ```
+
+---
 
 ## Run
 
@@ -84,59 +123,69 @@ uv run manage.py createsuperuser   # for admin & JWT login tests
 uv run manage.py runbolt --dev --host localhost --port 8000
 ```
 
-- **API**: http://localhost:8000  
-- **Swagger**: http://localhost:8000/docs  
-- **Admin**: http://localhost:8000/admin/
+| Resource | URL |
+|----------|-----|
+| API | http://localhost:8000 |
+| Swagger | http://localhost:8000/docs |
+| Admin | http://localhost:8000/admin/ |
+
+---
+
+## API Documentation (Swagger)
+
+Interactive OpenAPI docs at `/docs` — Auth, Health, Users, WebSocket endpoints and schemas (LoginSchema, TokenSchema, UserSchema, UserCreateSchema).
+
+<p align="center">
+  <img src="swagger.png" alt="Swagger UI — Django Bolt Test API" width="800"/>
+</p>
+
+*Screenshot: Swagger UI at http://localhost:8000/docs*
+
+---
 
 ## API Endpoints
 
-| Method | Path           | Description              | Auth        |
-|--------|----------------|--------------------------|-------------|
-| GET    | `/health`      | Liveness                  | No          |
-| GET    | `/ready`       | Readiness (DB + checks)   | No          |
-| POST   | `/auth/login`  | JWT token (body: username, password) | No  |
-| GET    | `/users`       | List users (paginated, ?search=)    | No  |
-| GET    | `/users/{id}`  | Get user by ID           | No          |
-| GET    | `/users/me`    | Current user             | JWT         |
-| POST   | `/users`       | Create user (staff only) | JWT + Staff |
-| WS     | `/ws`          | Echo WebSocket            | No          |
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/health` | Liveness | — |
+| GET | `/ready` | Readiness (DB + checks) | — |
+| POST | `/auth/login` | JWT token (body: `username`, `password`) | — |
+| GET | `/users` | List users (paginated, `?search=`) | — |
+| GET | `/users/{id}` | Get user by ID | — |
+| GET | `/users/me` | Current user | JWT |
+| POST | `/users` | Create user (staff only) | JWT + Staff |
+| WS | `/ws` | Echo WebSocket | — |
 
-**Response headers** (all): `X-Server-Time`, `X-Response-Time`.
+- **Response headers** (all): `X-Server-Time`, `X-Response-Time`.
+- **JWT:** `Authorization: Bearer <access_token>`.
 
-**JWT:** send `Authorization: Bearer <access_token>`.
+---
 
 ## Testing
 
-**Unit tests** (no server):
+Tests are written with **[pytest](https://pytest.org/)** (unit and integration). Unit tests need no server; integration tests call the live API and skip automatically if the server is not running (`require_server` fixture).
 
-```bash
-uv run pytest tests/test_schemas.py -v
-```
+| Type | Command | Notes |
+|------|---------|--------|
+| **Unit** | `uv run pytest tests/test_schemas.py -v` | No server; schemas only |
+| **Integration** | `uv run pytest tests/ -v -m integration` | Start server first |
+| **All** | `uv run pytest tests/ -v` | Unit runs; integration skips if server down |
 
-**Integration tests** (start server first):
+**Stack:** pytest, pytest-django, pytest-asyncio, httpx, websockets. Install dev deps: `uv sync --extra dev`.
 
-```bash
-uv run manage.py runbolt --dev --host localhost --port 8000 &
-uv run pytest tests/ -v -m integration
-# or: BASE_URL=http://localhost:8000 uv run pytest tests/ -v
-```
-
-**All tests** (integration tests skip automatically if server not running):
-
-```bash
-uv run pytest tests/ -v
-# Unit tests run; integration tests skip with message if server is down
-```
-
-Optional dev deps: `uv sync --extra dev` (adds pytest, pytest-django, pytest-asyncio, httpx, websockets).
+---
 
 ## Settings (optional)
 
 In `config/settings.py`:
 
-- `BOLT_JWT_SECRET` – JWT signing secret (default: `SECRET_KEY`)
-- `BOLT_JWT_ALGORITHM` – default `"HS256"`
-- `BOLT_JWT_EXPIRES_SECONDS` – default `3600`
+| Setting | Default |
+|---------|---------|
+| `BOLT_JWT_SECRET` | `SECRET_KEY` |
+| `BOLT_JWT_ALGORITHM` | `"HS256"` |
+| `BOLT_JWT_EXPIRES_SECONDS` | `3600` |
+
+---
 
 ## License
 

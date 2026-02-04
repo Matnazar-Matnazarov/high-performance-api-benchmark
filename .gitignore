@@ -12,3 +12,4 @@ wheels/
 # Local DB and IDE
 db.sqlite3
 .vscode/
+.env
