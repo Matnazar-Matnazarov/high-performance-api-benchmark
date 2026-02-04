@@ -1,7 +1,7 @@
 [project]
 name = "django-bolt-test"
 version = "0.1.0"
-description = "Add your description here"
+description = "Django Bolt API: JWT, pagination, search, health, WebSocket"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
@@ -16,4 +16,14 @@ dependencies = [
     "sqlparse==0.5.5",
     "typing-extensions==4.15.0",
     "uvloop==0.22.1",
+]
+
+
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["."]
+markers = [
+    "integration: marks tests that require a running server (deselect with '-m \"not integration\"')",
 ]

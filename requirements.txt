@@ -9,3 +9,10 @@ ruff==0.14.14
 sqlparse==0.5.5
 typing-extensions==4.15.0
 uvloop==0.22.1
+
+# Dev / tests
+pytest
+pytest-django
+pytest-asyncio
+httpx
+websockets

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_bolt",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -116,3 +117,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# Django Bolt – JWT (uses SECRET_KEY if not set)
+BOLT_JWT_SECRET = None  # None = use SECRET_KEY
+BOLT_JWT_ALGORITHM = "HS256"
+BOLT_JWT_EXPIRES_SECONDS = 3600

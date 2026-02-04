@@ -5,14 +5,40 @@ from django.utils import timezone
 User = get_user_model()
 
 
-# User schema for Bolt API
+# ----- Auth -----
+class LoginSchema(msgspec.Struct):
+    """Request body for POST /auth/login."""
+
+    username: str
+    password: str
+
+
+class TokenSchema(msgspec.Struct):
+    """JWT token response."""
+
+    access_token: str
+    expires_in: int
+    token_type: str = "bearer"
+
+
+# ----- Users -----
 class UserSchema(msgspec.Struct):
+    """User response (public fields)."""
+
     id: int
     username: str
 
     @classmethod
     def from_user(cls, user: User) -> "UserSchema":
         return cls(id=user.id, username=user.username)
+
+
+class UserCreateSchema(msgspec.Struct):
+    """Request body for POST /users (create user)."""
+
+    username: str
+    password: str
+    email: str = ""
 
 
 # User schema for Django Admin
