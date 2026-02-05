@@ -21,7 +21,7 @@ def get_openapi_config() -> OpenAPIConfig:
     """Build OpenAPI config with JWT Bearer security scheme for Swagger/Redoc/Scalar."""
     title = (
         getattr(settings, "PROJECT_NAME", "Django - Bolt API")
-        or getattr(settings, "SITE_NAME", "Django - Bolt API")
+        or getattr(settings, "SITE_NAME", "Django - Bolt API swagger")
         or "API"
     )
     return OpenAPIConfig(
