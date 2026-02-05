@@ -20,8 +20,8 @@ from django_bolt.openapi.spec import Components, SecurityScheme
 def get_openapi_config() -> OpenAPIConfig:
     """Build OpenAPI config with JWT Bearer security scheme for Swagger/Redoc/Scalar."""
     title = (
-        getattr(settings, "Django - Bolt API", None)
-        or getattr(settings, "Django Bolt API", None)
+        getattr(settings, "PROJECT_NAME", "Django - Bolt API")
+        or getattr(settings, "SITE_NAME", "Django - Bolt API")
         or "API"
     )
     return OpenAPIConfig(
