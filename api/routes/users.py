@@ -1,4 +1,4 @@
-"""User routes: list (search, pagination), get by id, me (JWT), create (staff)."""
+"""User routes: list (search, pagination, filter by role), get by id, me (JWT), create (staff, with role)."""
 
 from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
@@ -13,9 +13,12 @@ from django_bolt import (
 from django_bolt.auth import AllowAny
 from django_bolt.exceptions import HTTPException
 from django_bolt.pagination import paginate
+from accounts.models import Role
 from accounts.schemas import UserCreateSchema, UserSchema
 
 User = get_user_model()
+
+VALID_ROLES = {Role.ADMIN, Role.SHOPKEEPER, Role.CUSTOMER}
 
 
 def _query_params(request) -> dict:
@@ -32,18 +35,25 @@ def register(api):
     @api.get("/users", auth=[], guards=[AllowAny()])
     @paginate(PageNumberPagination)
     async def list_users(request: HttpRequest):
-        """List users with optional search. Paginated. Public."""
-        qs = User.objects.only("id", "username").order_by("id")
+        """List users with optional search and role filter. Paginated. Public."""
+        qs = User.objects.only("id", "username", "role").order_by("id")
         query = _query_params(request)
         search = (query.get("search") or "").strip()
         if search:
             qs = qs.filter(username__icontains=search)
+        role = (query.get("role") or query.get("role_code") or "").strip().upper()
+        if role and role in VALID_ROLES:
+            qs = qs.filter(role=role)
         return qs
 
     @api.get("/users/{user_id}", auth=[], guards=[AllowAny()])
     async def get_user(request: HttpRequest, user_id: int) -> UserSchema:
         """Get user by ID. Public."""
-        user = await User.objects.only("id", "username").filter(id=user_id).afirst()
+        user = (
+            await User.objects.only("id", "username", "role")
+            .filter(id=user_id)
+            .afirst()
+        )
         if user is None:
             raise HTTPException(status_code=404, detail="User not found")
         return UserSchema.from_user(user)
@@ -52,7 +62,7 @@ def register(api):
     async def get_me(request: HttpRequest) -> UserSchema:
         """Current user. Requires JWT."""
         user = (
-            await User.objects.only("id", "username")
+            await User.objects.only("id", "username", "role")
             .filter(id=request.user.id)
             .afirst()
         )
@@ -66,12 +76,19 @@ def register(api):
         guards=[IsAuthenticated(), IsStaff()],
     )
     async def create_user(request: HttpRequest, body: UserCreateSchema) -> UserSchema:
-        """Create user. Staff only."""
+        """Create user with role. Staff only. Default role: CUSTOMER."""
         if await User.objects.filter(username=body.username).aexists():
             raise HTTPException(status_code=400, detail="Username already exists")
+        role = (body.role or Role.CUSTOMER).strip().upper()
+        if role not in VALID_ROLES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid role. Must be one of: {', '.join(VALID_ROLES)}",
+            )
         user = await sync_to_async(User.objects.create_user)(
             username=body.username,
             password=body.password,
             email=body.email or "",
+            role=role,
         )
         return UserSchema.from_user(user)

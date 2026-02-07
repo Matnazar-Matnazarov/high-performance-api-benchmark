@@ -2,6 +2,8 @@ import msgspec
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from accounts.models import Role
+
 User = get_user_model()
 
 
@@ -21,16 +23,29 @@ class TokenSchema(msgspec.Struct):
     token_type: str = "bearer"
 
 
+# ----- Roles (from Role TextChoices) -----
+class RoleSchema(msgspec.Struct):
+    """Role option for API (code + display name)."""
+
+    code: str
+    name: str
+
+
 # ----- Users -----
 class UserSchema(msgspec.Struct):
-    """User response (public fields)."""
+    """User response (id, username, role)."""
 
     id: int
     username: str
+    role: str
 
     @classmethod
     def from_user(cls, user: User) -> "UserSchema":
-        return cls(id=user.id, username=user.username)
+        return cls(
+            id=user.id,
+            username=user.username,
+            role=user.role or Role.CUSTOMER,
+        )
 
 
 class UserCreateSchema(msgspec.Struct):
@@ -39,6 +54,7 @@ class UserCreateSchema(msgspec.Struct):
     username: str
     password: str
     email: str = ""
+    role: str = Role.CUSTOMER
 
 
 # User schema for Django Admin

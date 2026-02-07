@@ -1,26 +1,21 @@
-"""Health check endpoint tests."""
+"""Health check endpoint tests (sync, in-process)."""
 
 import pytest
-import httpx
 
 
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_health_live(require_server):
-    """GET /health returns 200 and status ok (requires running server)."""
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        r = await client.get(f"{require_server}/health")
+@pytest.mark.django_db(transaction=True)
+def test_health_ok(client):
+    """GET /health returns 200 and status ok."""
+    r = client.get("/health")
     assert r.status_code == 200
     data = r.json()
     assert data.get("status") == "ok"
 
 
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_ready_live(require_server):
-    """GET /ready returns 200 and status healthy (requires running server)."""
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        r = await client.get(f"{require_server}/ready")
+@pytest.mark.django_db(transaction=True)
+def test_ready(client):
+    """GET /ready returns 200 and status healthy/unhealthy with checks."""
+    r = client.get("/ready")
     assert r.status_code == 200
     data = r.json()
     assert "status" in data
