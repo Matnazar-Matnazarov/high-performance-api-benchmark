@@ -5,6 +5,7 @@ description = "Django Bolt API: JWT, pagination, search, health, WebSocket"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "adrf>=0.1.12",
     "anyio==4.12.1",
     "asgiref==3.11.0",
     "asyncpg>=0.31.0",
