@@ -36,7 +36,7 @@
 | **Permissions** | `AllowAny` (list, get), `IsAuthenticated` + `IsStaff` (create user) |
 | **WebSocket** | `WS /ws` echo (text + JSON) |
 | **Observability** | `X-Server-Time`, `X-Response-Time` on every response |
-| **DRF** | Django REST Framework at `/drf/` (JWT via SimpleJWT, same endpoints as Bolt) |
+| **DRF** | Django REST Framework at `/drf/` (async via adrf, Bolt-compatible JWT, same endpoints) |
 | **Docs** | OpenAPI/Swagger at `/docs` (JWT Authorize), Django Admin at `/admin/` |
 
 ---
@@ -49,8 +49,9 @@
 | [Django](https://www.djangoproject.com/) 6.x | Web framework |
 | [Django Bolt](https://github.com/FarhanAliRaza/django-bolt) 0.5.x | Async API layer |
 | [msgspec](https://github.com/jcrist/msgspec) | Schemas & serialization |
-| [Django REST Framework](https://www.django-rest-framework.org/) | REST API (sync) |
-| [djangorestframework-simplejwt](https://github.com/jazzband/djangorestframework-simplejwt) | JWT auth for DRF |
+| [Django REST Framework](https://www.django-rest-framework.org/) | REST API |
+| [adrf](https://github.com/em1208/adrf) | Async DRF views & ViewSets |
+| [djangorestframework-simplejwt](https://github.com/jazzband/djangorestframework-simplejwt) | JWT auth (SimpleJWT at `/auth/login/jwt/`) |
 | [pytest](https://pytest.org/) | Testing (sync TestClient, no server required) |
 | [uv](https://github.com/astral-sh/uv) | Dependency management |
 
@@ -70,9 +71,10 @@ django-bolt-test/
 │       ├── roles.py             # GET /roles, GET /roles/code/{code}
 │       ├── users.py             # GET/POST /users, /users/me
 │       └── websocket.py         # WS /ws
-├── api_drf/                     # DRF API (same endpoints as Bolt)
+├── api_drf/                     # DRF API async (adrf, same endpoints as Bolt)
+│   ├── auth.py                  # BoltJWTAuthentication (access_token)
 │   ├── serializers.py           # UserSerializer, UserCreateSerializer
-│   ├── views.py                 # health, roles, users
+│   ├── views.py                 # async health, roles, users, BoltLoginView
 │   └── urls.py                  # /drf/...
 ├── config/                      # Django project
 │   ├── api.py                   # Re-export: from api import api
@@ -89,7 +91,10 @@ django-bolt-test/
 │   ├── test_schemas.py, test_websocket.py, test_load.py
 │   └── ...
 ├── scripts/
-│   └── load_test.py             # Load test: req/sec, success/fail
+│   └── load_test.py             # Load test (Python): req/sec, success/fail
+├── loadtest/                    # Load test (Go): faster, higher throughput
+│   ├── main.go
+│   └── go.mod
 ├── assets/
 │   └── django-bolt-logo.png     # Django Bolt branding
 ├── manage.py
@@ -135,8 +140,15 @@ uv run manage.py createsuperuser   # for admin & JWT login
 uv run manage.py runbolt --dev --host localhost --port 8000
 ```
 
-**DRF API** (sync, port 8001):
+**DRF API** (async via adrf, port 8001):
 ```bash
+# ASGI (recommended): uvicorn; use --workers 4 for load testing
+uv run uvicorn config.asgi:application --host 0.0.0.0 --port 8001 --workers 4
+
+# or single worker (development)
+uv run uvicorn config.asgi:application --host 0.0.0.0 --port 8001
+
+# or: Django runserver (WSGI)
 uv run manage.py runserver 8001
 ```
 
@@ -181,7 +193,7 @@ Interactive OpenAPI docs at `/docs` — Auth, Health, Users, WebSocket endpoints
 - **Response headers** (all): `X-Server-Time`, `X-Response-Time`.
 - **JWT:** `Authorization: Bearer <access_token>`.
 
-**DRF** (`/drf/` prefix, runserver 8001): same endpoints, JWT via SimpleJWT (`access`/`refresh` tokens).
+**DRF** (`/drf/` prefix, port 8001): same endpoints, async. Login `/auth/login/` returns Bolt format (`access_token`, `expires_in`, `token_type`). SimpleJWT at `/auth/login/jwt/`.
 
 ---
 
@@ -203,23 +215,34 @@ Tests are written with **[pytest](https://pytest.org/)** (unit and integration).
 
 Measures **req/sec**, **success** vs **fail** counts, and latency percentiles. Requires a running server.
 
+**Python:**
 ```bash
 # Bolt (port 8000)
-uv run manage.py runbolt --dev --host localhost --port 8000
+uv run manage.py runbolt --processes 4 --host localhost --port 8000
 uv run python scripts/load_test.py -a bolt -d 5 -c 50
 
-# DRF (port 8001)
-uv run manage.py runserver 8001
+# DRF (port 8001) — use uvicorn --workers 4 for load test
+uv run uvicorn config.asgi:application --host 0.0.0.0 --port 8001 --workers 4
 uv run python scripts/load_test.py -a drf -u http://localhost:8001 -d 5 -c 50
+```
+
+**Go** (faster, higher throughput, multi-endpoint):
+```bash
+cd loadtest
+go build -o loadtest .
+./loadtest -api bolt -duration 5s -concurrency 50
+./loadtest -api drf -duration 5s -concurrency 50
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `-a, --api` | `bolt` | API type: `bolt` or `drf` |
 | `-u, --url` | bolt: 8000, drf: 8001 | Base URL |
-| `-d, --duration` | `5` | Duration in seconds |
+| `-d, --duration` | `5` (Python) / `5s` (Go) | Duration |
 | `-c, --concurrency` | `20` | Concurrent workers |
 | `-e, --endpoints` | (per API) | Comma-separated endpoints |
+
+Go defaults: Bolt → `/health`, `/health/test`, `/ready`, `/users`, `/roles`; DRF → `/drf/health/`, `/drf/health/test/`, etc.
 
 Pytest integration tests (servers must be running):
 
@@ -238,6 +261,35 @@ In `config/settings.py`:
 | `BOLT_JWT_SECRET` | `SECRET_KEY` |
 | `BOLT_JWT_ALGORITHM` | `"HS256"` |
 | `BOLT_JWT_EXPIRES_SECONDS` | `3600` |
+
+---
+
+## Troubleshooting
+
+**PostgreSQL collation version mismatch** (warning when starting):
+
+```
+WARNING: database "bolt_test" has a collation version mismatch
+DETAIL: The database was created using collation version 2.42, but the operating system provides version 2.43.
+```
+
+Fix (requires DB_USER with superuser or database owner):
+
+```bash
+uv run manage.py fix_db_collation
+```
+
+Or manually in `psql` (as superuser):
+
+```sql
+ALTER DATABASE bolt_test REFRESH COLLATION VERSION;
+```
+
+**DRF load test failures** (high fail rate): Run DRF with multiple workers to match Bolt:
+
+```bash
+uv run uvicorn config.asgi:application --host 0.0.0.0 --port 8001 --workers 4
+```
 
 ---
 

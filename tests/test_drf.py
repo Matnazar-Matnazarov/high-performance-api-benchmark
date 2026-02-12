@@ -68,7 +68,7 @@ def test_drf_users_list(drf_client):
 
 @pytest.mark.django_db(transaction=True)
 def test_drf_login_success(drf_client, test_user):
-    """POST /drf/auth/login/ with valid credentials returns JWT."""
+    """POST /drf/auth/login/ with valid credentials returns Bolt-style JWT."""
     r = drf_client.post(
         "/drf/auth/login/",
         {"username": "admin", "password": "admin"},
@@ -76,8 +76,8 @@ def test_drf_login_success(drf_client, test_user):
     )
     assert r.status_code == 200
     data = r.json()
-    assert "access" in data
-    assert "refresh" in data
+    assert "access_token" in data
+    assert data.get("token_type") == "bearer"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -107,7 +107,7 @@ def test_drf_users_me_with_jwt(drf_client, test_user):
         format="json",
     )
     assert login_r.status_code == 200
-    token = login_r.json()["access"]
+    token = login_r.json()["access_token"]
     drf_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     r = drf_client.get("/drf/users/me/")
     assert r.status_code == 200
