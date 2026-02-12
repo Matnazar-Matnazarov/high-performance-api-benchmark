@@ -205,10 +205,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-
-# Go load test binary
-loadtest/loadtest
-
-# uv lock files
-uv.lock
-uv.lock.toml

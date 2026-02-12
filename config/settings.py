@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
-    "adrf",
     "django_bolt",
     "accounts",
 ]
@@ -93,9 +92,6 @@ DATABASES = {
         "HOST": env.str("DB_HOST"),
         "PORT": env.int("DB_PORT"),
         "CONN_MAX_AGE": 60,
-        "OPTIONS": {
-            "connect_timeout": 10,
-        },
     }
 }
 
@@ -143,10 +139,9 @@ BOLT_JWT_EXPIRES_SECONDS = 3600
 
 AUTH_USER_MODEL = "accounts.User"
 
-# Django REST Framework (async via adrf)
+# Django REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "api_drf.auth.BoltJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
