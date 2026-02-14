@@ -11,6 +11,7 @@ import (
 
 	"high_performance_api_benchmark/internal/config"
 	"high_performance_api_benchmark/internal/database"
+	"high_performance_api_benchmark/internal/docs"
 	"high_performance_api_benchmark/internal/handlers"
 	"high_performance_api_benchmark/internal/middleware"
 
@@ -26,6 +27,13 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Timing)
+
+	// Swagger UI & OpenAPI (Bolt-compatible, X-Response-Time on all responses)
+	r.Get("/swagger-ui/", docs.SwaggerUIHandler())
+	r.Get("/swagger-ui", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger-ui/", http.StatusMovedPermanently)
+	})
+	r.Get("/api-docs/openapi.json", docs.ServeOpenAPI(""))
 
 	// Health
 	r.Get("/health", handlers.Health)

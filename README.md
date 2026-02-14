@@ -1,27 +1,32 @@
 <p align="center">
-  <a href="https://www.djangoproject.com/" target="_blank">
-    <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" height="28"/>
-  </a>
-  <a href="https://github.com/FarhanAliRaza/django-bolt" target="_blank">
-    <img src="https://img.shields.io/badge/Django__Bolt-0.5.x-0C4A6E?style=for-the-badge&logo=lightning&logoColor=white" alt="Django Bolt" height="28"/>
-  </a>
-  <a href="https://www.python.org/" target="_blank">
-    <img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.13+" height="28"/>
-  </a>
-  <a href="https://github.com/Matnazar-Matnazarov/high-performance-api-benchmark/blob/main/LICENSE" target="_blank">
-    <img src="https://img.shields.io/github/license/Matnazar-Matnazarov/high-performance-api-benchmark?style=for-the-badge" alt="License" height="28"/>
-  </a>
+  <a href="https://www.djangoproject.com/" target="_blank"><img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" height="26"/></a>
+  <a href="https://github.com/FarhanAliRaza/django-bolt" target="_blank"><img src="https://img.shields.io/badge/Django__Bolt-0.5.x-0C4A6E?style=for-the-badge&logo=lightning&logoColor=white" alt="Django Bolt" height="26"/></a>
+  <a href="https://fastapi.tiangolo.com/" target="_blank"><img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" height="26"/></a>
+  <a href="https://expressjs.com/" target="_blank"><img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" height="26"/></a>
+  <a href="https://nestjs.com/" target="_blank"><img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS" height="26"/></a>
+  <a href="https://go.dev/" target="_blank"><img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go" height="26"/></a>
+  <a href="https://www.rust-lang.org/" target="_blank"><img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" height="26"/></a>
+  <a href="https://www.python.org/" target="_blank"><img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" height="26"/></a>
+  <a href="https://nodejs.org/" target="_blank"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" height="26"/></a>
+  <a href="https://www.postgresql.org/" target="_blank"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" height="26"/></a>
+  <a href="https://github.com/Matnazar-Matnazarov/high-performance-api-benchmark/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License" height="26"/></a>
 </p>
 
 <h1 align="center">High-Performance API Benchmark</h1>
 
 <p align="center">
-  <strong>Benchmark comparison</strong> of Django Bolt, DRF, FastAPI, Express.js, NestJS, Go, and Rust — same endpoints, load-tested for throughput and latency.
+  <strong>Benchmark comparison</strong> of 7 API implementations — same Bolt-compatible endpoints, load-tested for throughput and latency.
 </p>
 
 <p align="center">
-  Django Bolt · DRF · FastAPI · Express · NestJS · Go · Rust · JWT · Health · WebSocket · OpenAPI/Swagger
+  <code>Django Bolt</code> · <code>DRF</code> · <code>FastAPI</code> · <code>Express</code> · <code>NestJS</code> · <code>Go</code> · <code>Rust</code> · JWT · OpenAPI/Swagger
 </p>
+
+---
+
+## Table of Contents
+
+- [Features](#features) · [Tech Stack](#tech-stack) · [Installation](#installation) · [Run](#run) · [API Docs](#api-documentation-swagger--openapi) · [Load Test](#load-test)
 
 ---
 
@@ -35,7 +40,7 @@
 | **Pagination** | `GET /users?page=1&page_size=10` (page-number) |
 | **Permissions** | `AllowAny` (list, get), `IsAuthenticated` + `IsStaff` (create user) |
 | **WebSocket** | `WS /ws` echo (text + JSON) |
-| **Observability** | `X-Server-Time`, `X-Response-Time` on every response |
+| **Observability** | `X-Server-Time`, `X-Response-Time` (ms) on every response — all APIs |
 | **DRF** | Django REST Framework at `/drf/` (JWT via SimpleJWT, same endpoints as Bolt) |
 | **Docs** | OpenAPI/Swagger at `/docs` (JWT Authorize), Django Admin at `/admin/` |
 
@@ -43,16 +48,13 @@
 
 ## Tech Stack
 
-| Technology | Role |
-|------------|------|
-| [Python](https://www.python.org/) 3.13+ | Runtime |
-| [Django](https://www.djangoproject.com/) 6.x | Web framework |
-| [Django Bolt](https://github.com/FarhanAliRaza/django-bolt) 0.5.x | Async API layer |
-| [msgspec](https://github.com/jcrist/msgspec) | Schemas & serialization |
-| [Django REST Framework](https://www.django-rest-framework.org/) | REST API (sync) |
-| [djangorestframework-simplejwt](https://github.com/jazzband/djangorestframework-simplejwt) | JWT auth for DRF |
-| [pytest](https://pytest.org/) | Testing (sync TestClient, no server required) |
-| [uv](https://github.com/astral-sh/uv) | Dependency management |
+| Stack | Technologies |
+|-------|--------------|
+| **Languages** | ![Python](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript) ![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go) ![Rust](https://img.shields.io/badge/Rust-000000?logo=rust) |
+| **Frameworks** | Django, Django Bolt, DRF, FastAPI, Express.js, NestJS, Chi (Go), Actix-web (Rust) |
+| **Database** | PostgreSQL (shared schema) |
+| **Auth** | JWT (Bolt-compatible), SimpleJWT (DRF) |
+| **Tools** | uv, pytest, Swagger UI |
 
 ---
 
@@ -154,7 +156,7 @@ uv run manage.py createsuperuser   # for admin & JWT login
 
 **Bolt API** (async, port 8000):
 ```bash
-uv run manage.py runbolt --dev --host localhost --port 8000
+uv run manage.py runbolt --processes 4 --dev --host localhost --port 8000
 ```
 
 **DRF API** (sync, port 8001):
@@ -197,20 +199,29 @@ cd rust && cargo run --release
 | Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) | Go (8005) | Rust (8006) |
 |----------|-------------|------------|----------------|----------------|-------------|-----------|-------------|
 | API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 | http://localhost:8005 | http://localhost:8006 |
-| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | — | http://localhost:8006/swagger-ui/ |
+| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | http://localhost:8005/swagger-ui/ | http://localhost:8006/swagger-ui/ |
 | ReDoc | — | — | — | http://localhost:8003/redoc | — | — | — |
 | Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — | — | — |
 
 ---
 
-## API Documentation (Swagger)
+## API Documentation (Swagger / OpenAPI)
 
-Interactive OpenAPI docs at `/docs` — Auth, Health, Users, WebSocket endpoints and schemas (LoginSchema, TokenSchema, UserSchema, UserCreateSchema).
+All implementations expose interactive OpenAPI docs. Every response includes **X-Response-Time** (request processing duration in ms) and **X-Server-Time** (UTC timestamp).
 
-**Authenticated requests in Swagger:**  
-1. Call **POST /auth/login** with `username` and `password` to get `access_token`.  
-2. Click **Authorize** (top right), enter `Bearer <your_access_token>` and confirm.  
-3. Protected endpoints (e.g. **GET /users/me**, **POST /users**) will then send the token automatically.
+| API | Swagger UI |
+|-----|------------|
+| Bolt | http://localhost:8000/docs |
+| FastAPI | http://localhost:8002/docs |
+| Express | http://localhost:8003/docs |
+| Nest | http://localhost:8004/docs |
+| **Go** | http://localhost:8005/swagger-ui/ |
+| **Rust** | http://localhost:8006/swagger-ui/ |
+
+**JWT in Swagger:**  
+1. Call **POST /auth/login** with `username` and `password` → get `access_token`.  
+2. Click **Authorize**, enter `Bearer <your_access_token>`.  
+3. Protected endpoints (e.g. **GET /users/me**, **POST /users**) send the token automatically.
 
 <p align="center">
   <img src="swagger.png" alt="Swagger UI — Django Bolt Test API" width="800"/>
