@@ -1,0 +1,22 @@
+{
+  "name": "high-performance-api-benchmark-express",
+  "version": "0.1.0",
+  "description": "Express.js API - Bolt-compatible endpoints (health, roles, users, auth)",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:cluster": "EXPRESS_WORKERS=4 node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.0",
+    "swagger-ui-express": "^5.0.0"
+  }
+}

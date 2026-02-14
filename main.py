@@ -1,5 +1,5 @@
 def main():
-    print("Hello from django-bolt-test!")
+    print("Hello from high-performance-api-benchmark!")
 
 
 if __name__ == "__main__":
