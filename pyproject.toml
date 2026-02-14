@@ -1,7 +1,7 @@
 [project]
-name = "django-bolt-test"
+name = "high-performance-api-benchmark"
 version = "0.1.0"
-description = "Django Bolt API: JWT, pagination, search, health, WebSocket"
+description = "API benchmark: Django Bolt, DRF, FastAPI, Express, NestJS — same endpoints, load-tested"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [

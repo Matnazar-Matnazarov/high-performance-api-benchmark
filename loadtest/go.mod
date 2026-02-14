@@ -1,3 +1,3 @@
-module github.com/matnazar/django-bolt-test/loadtest
+module github.com/matnazar/high-performance-api-benchmark/loadtest
 
 go 1.22

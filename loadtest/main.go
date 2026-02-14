@@ -81,8 +81,8 @@ func worker(client *http.Client, url string, stop <-chan struct{}, total, succes
 }
 
 func main() {
-	api := flag.String("api", "bolt", "API type: bolt, drf, or fastapi")
-	url := flag.String("url", "", "Base URL (default: bolt=8000, drf=8001, fastapi=8002)")
+	api := flag.String("api", "bolt", "API type: bolt, drf, fastapi, express, or nest")
+	url := flag.String("url", "", "Base URL (default: bolt=8000, drf=8001, fastapi=8002, express=8003, nest=8004)")
 	endpoints := flag.String("endpoints", "", "Comma-separated endpoints (default per API)")
 	dur := flag.Duration("duration", 5*time.Second, "Test duration")
 	concurrency := flag.Int("concurrency", 20, "Concurrent workers")
@@ -95,6 +95,10 @@ func main() {
 			baseURL = "http://localhost:8001"
 		case "fastapi":
 			baseURL = "http://localhost:8002"
+		case "express":
+			baseURL = "http://localhost:8003"
+		case "nest":
+			baseURL = "http://localhost:8004"
 		default:
 			baseURL = "http://localhost:8000"
 		}
@@ -115,10 +119,10 @@ func main() {
 		ep := eps[i%len(eps)]
 		fullURL := buildURL(baseURL, ep)
 		wg.Add(1)
-		go func() {
+		go func(url string) {
 			defer wg.Done()
-			worker(client, fullURL, stop, &total, &success, &fail, &latencies, &latMu)
-		}()
+			worker(client, url, stop, &total, &success, &fail, &latencies, &latMu)
+		}(fullURL)
 	}
 
 	fmt.Printf("Load test: %s @ %s\n", strings.ToUpper(*api), baseURL)
@@ -189,7 +193,7 @@ func parseEndpoints(api, raw string) []string {
 			"/drf/users/",
 			"/drf/roles/",
 		}
-	case "fastapi":
+	case "fastapi", "express", "nest":
 		return []string{
 			"/health",
 			"/health/test",

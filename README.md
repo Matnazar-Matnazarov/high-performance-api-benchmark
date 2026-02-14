@@ -8,19 +8,19 @@
   <a href="https://www.python.org/" target="_blank">
     <img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.13+" height="28"/>
   </a>
-  <a href="https://github.com/Matnazar-Matnazarov/django-bolt-test/blob/main/LICENSE" target="_blank">
-    <img src="https://img.shields.io/github/license/Matnazar-Matnazarov/django-bolt-test?style=for-the-badge" alt="License" height="28"/>
+  <a href="https://github.com/Matnazar-Matnazarov/high-performance-api-benchmark/blob/main/LICENSE" target="_blank">
+    <img src="https://img.shields.io/github/license/Matnazar-Matnazarov/high-performance-api-benchmark?style=for-the-badge" alt="License" height="28"/>
   </a>
 </p>
 
-<h1 align="center">Django Bolt Test</h1>
+<h1 align="center">High-Performance API Benchmark</h1>
 
 <p align="center">
-  <strong>High-performance REST API</strong> built with <a href="https://github.com/FarhanAliRaza/django-bolt">Django Bolt</a> — async Python API framework on top of Django.
+  <strong>Benchmark comparison</strong> of Django Bolt, DRF, FastAPI, Express.js, and NestJS — same endpoints, load-tested for throughput and latency.
 </p>
 
 <p align="center">
-  JWT · Roles · Pagination · Search · Health checks · WebSocket · DRF · OpenAPI/Swagger · Tests
+  Django Bolt · DRF · FastAPI · Express · NestJS · JWT · Health · WebSocket · OpenAPI/Swagger
 </p>
 
 ---
@@ -59,7 +59,7 @@
 ## Project Structure
 
 ```
-django-bolt-test/
+high-performance-api-benchmark/
 ├── api/                      # Bolt API package
 │   ├── __init__.py            # BoltAPI instance, middleware, register routes
 │   ├── middleware.py          # X-Server-Time, X-Response-Time
@@ -100,6 +100,12 @@ django-bolt-test/
 │   ├── middleware.py            # X-Server-Time, X-Response-Time
 │   ├── routers/                 # health, roles, users
 │   └── schemas/                 # Pydantic models
+├── express/                     # Express.js (Bolt-compatible, port 8003)
+│   ├── src/                     # index, config, db, middleware, routes
+│   └── package.json
+├── nest/                        # NestJS (Bolt-compatible, port 8004, Fastify)
+│   ├── src/                     # modules: health, roles, users, auth
+│   └── package.json
 ├── assets/
 │   └── django-bolt-logo.png     # Django Bolt branding
 ├── manage.py
@@ -119,8 +125,8 @@ django-bolt-test/
 ## Installation
 
 ```bash
-git clone https://github.com/Matnazar-Matnazarov/django-bolt-test.git
-cd django-bolt-test
+git clone https://github.com/Matnazar-Matnazarov/high-performance-api-benchmark.git
+cd high-performance-api-benchmark
 
 uv venv
 uv sync
@@ -147,7 +153,7 @@ uv run manage.py runbolt --dev --host localhost --port 8000
 
 **DRF API** (sync, port 8001):
 ```bash
-uv run manage.py runserver 8001
+uv run uvicorn config.asgi:application --workers 4 --port 8001
 ```
 
 **FastAPI** (Bolt-compatible, port 8002):
@@ -156,11 +162,24 @@ uv run manage.py runserver 8001
 uv run uvicorn src.main:app --host 0.0.0.0 --port 8002 --workers 4
 ```
 
-| Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) |
-|----------|-------------|------------|----------------|
-| API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 |
-| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs |
-| Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — |
+**Express.js** (Bolt-compatible, port 8003):
+```bash
+cd express && npm install && npm start
+# Same endpoints as Bolt; uses pg, same DB
+```
+
+**NestJS** (Bolt-compatible, port 8004, Fastify):
+```bash
+cd nest && npm install && npm run build && npm start
+# Same endpoints as Bolt; Fastify + pg
+```
+
+| Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) |
+|----------|-------------|------------|----------------|----------------|-------------|
+| API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 |
+| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs |
+| ReDoc | — | — | — | http://localhost:8003/redoc | — |
+| Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — |
 
 ---
 
@@ -201,6 +220,10 @@ Interactive OpenAPI docs at `/docs` — Auth, Health, Users, WebSocket endpoints
 
 **FastAPI** (port 8002): same endpoints as Bolt, asyncpg, same DB. For load test comparison.
 
+**Express.js** (port 8003): same endpoints as Bolt, pg, same DB. For load test comparison.
+
+**NestJS** (port 8004): same endpoints as Bolt, Fastify + pg. For load test comparison.
+
 ---
 
 ## Testing
@@ -233,6 +256,14 @@ uv run python scripts/load_test.py -a drf -u http://localhost:8001 -d 5 -c 50
 # FastAPI (port 8002)
 uv run uvicorn src.main:app --host 0.0.0.0 --port 8002 --workers 4
 uv run python scripts/load_test.py -a fastapi -u http://localhost:8002 -d 5 -c 50
+
+# Express (port 8003) — use EXPRESS_WORKERS=4 for load test
+cd express && EXPRESS_WORKERS=4 npm start
+uv run python scripts/load_test.py -a express -u http://localhost:8003 -d 5 -c 50
+
+# Nest (port 8004)
+cd nest && npm run build && npm start
+uv run python scripts/load_test.py -a nest -u http://localhost:8004 -d 5 -c 50
 ```
 
 **Go** (faster, higher throughput, multi-endpoint):
@@ -242,17 +273,31 @@ go build -o loadtest .
 ./loadtest -api bolt -duration 5s -concurrency 50
 ./loadtest -api drf -duration 5s -concurrency 50
 ./loadtest -api fastapi -duration 5s -concurrency 50
+./loadtest -api express -duration 5s -concurrency 50
+./loadtest -api nest -duration 5s -concurrency 50
 ```
+
+### Benchmark Results
+
+Representative results (5s duration, 50 concurrent workers, endpoints: `/health`, `/health/test`, `/ready`, `/users`, `/roles`). Hardware and background load affect numbers.
+
+| API | Req/sec | Success | Latency (ms) |
+|-----|---------|---------|---------------|
+| **Django-Bolt** (Django, 4 processes) | 9,816 | 100% | p50=4.3 · p95=11.4 · p99=16.5 |
+| **Express** (Node.js, pg) | 4,068 | 100% | p50=11.6 · p95=17.1 · p99=23.5 |
+| **Nest** (NestJS, Fastify + pg) | 3,879 | 100% | p50=12.0 · p95=18.5 · p99=27.1 |
+| **FastAPI** (asyncpg, 4 workers) | 3,132 | 100% | p50=13.3 · p95=24.9 · p99=35.4 |
+| **DRF** (Django async, 4 workers) | 725 | 87.4% | p50=63.6 · p95=117.1 · p99=162.3 |
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `-a, --api` | `bolt` | API type: `bolt`, `drf`, or `fastapi` |
-| `-u, --url` | bolt: 8000, drf: 8001, fastapi: 8002 | Base URL |
+| `-a, --api` | `bolt` | API type: `bolt`, `drf`, `fastapi`, `express`, or `nest` |
+| `-u, --url` | bolt: 8000, drf: 8001, fastapi: 8002, express: 8003, nest: 8004 | Base URL |
 | `-d, --duration` | `5` (Python) / `5s` (Go) | Duration |
 | `-c, --concurrency` | `20` | Concurrent workers |
 | `-e, --endpoints` | (per API) | Comma-separated endpoints |
 
-Go defaults: Bolt/FastAPI → `/health`, `/health/test`, `/ready`, `/users`, `/roles`; DRF → `/drf/health/`, `/drf/health/test/`, etc.
+Go defaults: Bolt/FastAPI/Express/Nest → `/health`, `/health/test`, `/ready`, `/users`, `/roles`; DRF → `/drf/health/`, `/drf/health/test/`, etc.
 Pytest integration tests (servers must be running):
 
 ```bash
