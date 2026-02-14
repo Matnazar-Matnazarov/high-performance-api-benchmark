@@ -8,6 +8,12 @@
   <a href="https://www.python.org/" target="_blank">
     <img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.13+" height="28"/>
   </a>
+  <a href="https://go.dev/" target="_blank">
+    <img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go" height="28"/>
+  </a>
+  <a href="https://www.rust-lang.org/" target="_blank">
+    <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" height="28"/>
+  </a>
   <a href="https://github.com/Matnazar-Matnazarov/high-performance-api-benchmark/blob/main/LICENSE" target="_blank">
     <img src="https://img.shields.io/github/license/Matnazar-Matnazarov/high-performance-api-benchmark?style=for-the-badge" alt="License" height="28"/>
   </a>
@@ -35,7 +41,7 @@
 | **Pagination** | `GET /users?page=1&page_size=10` (page-number) |
 | **Permissions** | `AllowAny` (list, get), `IsAuthenticated` + `IsStaff` (create user) |
 | **WebSocket** | `WS /ws` echo (text + JSON) |
-| **Observability** | `X-Server-Time`, `X-Response-Time` on every response |
+| **Observability** | `X-Server-Time`, `X-Response-Time` (ms) on every response — all APIs |
 | **DRF** | Django REST Framework at `/drf/` (JWT via SimpleJWT, same endpoints as Bolt) |
 | **Docs** | OpenAPI/Swagger at `/docs` (JWT Authorize), Django Admin at `/admin/` |
 
@@ -154,7 +160,7 @@ uv run manage.py createsuperuser   # for admin & JWT login
 
 **Bolt API** (async, port 8000):
 ```bash
-uv run manage.py runbolt --dev --host localhost --port 8000
+uv run manage.py runbolt --processes 4 --dev --host localhost --port 8000
 ```
 
 **DRF API** (sync, port 8001):
@@ -197,20 +203,29 @@ cd rust && cargo run --release
 | Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) | Go (8005) | Rust (8006) |
 |----------|-------------|------------|----------------|----------------|-------------|-----------|-------------|
 | API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 | http://localhost:8005 | http://localhost:8006 |
-| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | — | http://localhost:8006/swagger-ui/ |
+| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | http://localhost:8005/swagger-ui/ | http://localhost:8006/swagger-ui/ |
 | ReDoc | — | — | — | http://localhost:8003/redoc | — | — | — |
 | Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — | — | — |
 
 ---
 
-## API Documentation (Swagger)
+## API Documentation (Swagger / OpenAPI)
 
-Interactive OpenAPI docs at `/docs` — Auth, Health, Users, WebSocket endpoints and schemas (LoginSchema, TokenSchema, UserSchema, UserCreateSchema).
+All implementations expose interactive OpenAPI docs. Every response includes **X-Response-Time** (request processing duration in ms) and **X-Server-Time** (UTC timestamp).
 
-**Authenticated requests in Swagger:**  
-1. Call **POST /auth/login** with `username` and `password` to get `access_token`.  
-2. Click **Authorize** (top right), enter `Bearer <your_access_token>` and confirm.  
-3. Protected endpoints (e.g. **GET /users/me**, **POST /users**) will then send the token automatically.
+| API | Swagger UI |
+|-----|------------|
+| Bolt | http://localhost:8000/docs |
+| FastAPI | http://localhost:8002/docs |
+| Express | http://localhost:8003/docs |
+| Nest | http://localhost:8004/docs |
+| **Go** | http://localhost:8005/swagger-ui/ |
+| **Rust** | http://localhost:8006/swagger-ui/ |
+
+**JWT in Swagger:**  
+1. Call **POST /auth/login** with `username` and `password` → get `access_token`.  
+2. Click **Authorize**, enter `Bearer <your_access_token>`.  
+3. Protected endpoints (e.g. **GET /users/me**, **POST /users**) send the token automatically.
 
 <p align="center">
   <img src="swagger.png" alt="Swagger UI — Django Bolt Test API" width="800"/>

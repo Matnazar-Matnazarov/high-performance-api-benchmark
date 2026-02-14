@@ -16,6 +16,8 @@ Django-Bolt endpointlariga mos professional Go API. Chi router, pgx, Django pass
 | GET | `/users/{user_id}` | — | User by ID |
 | GET | `/users/me` | JWT | Current user |
 | POST | `/users` | JWT + Staff | Create user |
+| GET | `/swagger-ui/` | — | Swagger UI (OpenAPI docs) |
+| GET | `/api-docs/openapi.json` | — | OpenAPI 3.0 spec |
 
 ## Response headers
 
