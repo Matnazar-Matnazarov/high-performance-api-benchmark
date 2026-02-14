@@ -209,6 +209,15 @@ __marimo__/
 # Go load test binary
 loadtest/loadtest
 
+# Rust
+rust/target/
+
+# Node.js
+node_modules/
+
+# NestJS build
+nest/dist/
+
 # uv lock files
 uv.lock
 uv.lock.toml

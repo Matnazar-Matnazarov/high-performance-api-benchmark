@@ -1,4 +1,4 @@
-// Load test for Django Bolt, DRF, and FastAPI endpoints.
+// Load test for Django Bolt, DRF, FastAPI, Express, Nest, and Go endpoints.
 //
 // Benchmarks multiple endpoints in parallel. Measures req/sec, success/fail,
 // and latency percentiles (p50, p95, p99).
@@ -8,6 +8,10 @@
 //	./loadtest -api bolt -duration 5s -concurrency 50
 //	./loadtest -api drf -duration 5s -concurrency 50
 //	./loadtest -api fastapi -duration 5s -concurrency 50
+//	./loadtest -api express -duration 5s -concurrency 50
+//	./loadtest -api nest -duration 5s -concurrency 50
+//	./loadtest -api go -duration 5s -concurrency 50
+//	./loadtest -api rust -duration 5s -concurrency 50
 //	./loadtest -api bolt -endpoints /health,/health/test,/ready,/users,/roles
 package main
 
@@ -81,8 +85,8 @@ func worker(client *http.Client, url string, stop <-chan struct{}, total, succes
 }
 
 func main() {
-	api := flag.String("api", "bolt", "API type: bolt, drf, fastapi, express, or nest")
-	url := flag.String("url", "", "Base URL (default: bolt=8000, drf=8001, fastapi=8002, express=8003, nest=8004)")
+	api := flag.String("api", "bolt", "API type: bolt, drf, fastapi, express, nest, go, or rust")
+	url := flag.String("url", "", "Base URL (default: bolt=8000, drf=8001, fastapi=8002, express=8003, nest=8004, go=8005, rust=8006)")
 	endpoints := flag.String("endpoints", "", "Comma-separated endpoints (default per API)")
 	dur := flag.Duration("duration", 5*time.Second, "Test duration")
 	concurrency := flag.Int("concurrency", 20, "Concurrent workers")
@@ -99,6 +103,10 @@ func main() {
 			baseURL = "http://localhost:8003"
 		case "nest":
 			baseURL = "http://localhost:8004"
+		case "go":
+			baseURL = "http://localhost:8005"
+		case "rust":
+			baseURL = "http://localhost:8006"
 		default:
 			baseURL = "http://localhost:8000"
 		}
@@ -193,7 +201,7 @@ func parseEndpoints(api, raw string) []string {
 			"/drf/users/",
 			"/drf/roles/",
 		}
-	case "fastapi", "express", "nest":
+	case "fastapi", "express", "nest", "go", "rust":
 		return []string{
 			"/health",
 			"/health/test",
