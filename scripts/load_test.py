@@ -8,12 +8,18 @@ Bolt (runbolt): uv run manage.py runbolt --dev --host localhost --port 8000
 DRF (uvicorn): uv run uvicorn config.asgi:application --port 8001
 FastAPI (uvicorn): uv run uvicorn src.main:app --port 8002
 Express: cd express && npm start (port 8003)
+Nest: cd nest && npm start (port 8004)
+Go: cd go && go run . (port 8005)
+Rust: cd rust && cargo run --release (port 8006)
 
 Usage:
     uv run python scripts/load_test.py --api bolt
     uv run python scripts/load_test.py --api drf -u http://localhost:8001
     uv run python scripts/load_test.py --api fastapi -u http://localhost:8002
     uv run python scripts/load_test.py --api express -u http://localhost:8003
+    uv run python scripts/load_test.py --api nest -u http://localhost:8004
+    uv run python scripts/load_test.py --api go -u http://localhost:8005
+    uv run python scripts/load_test.py --api rust -u http://localhost:8006
 """
 
 import argparse
@@ -182,12 +188,22 @@ NEST_DEFAULTS = {
     "url": "http://localhost:8004",
     "endpoints": "/health,/health/test,/ready,/users,/roles",
 }
+GO_DEFAULTS = {
+    "url": "http://localhost:8005",
+    "endpoints": "/health,/health/test,/ready,/users,/roles",
+}
+RUST_DEFAULTS = {
+    "url": "http://localhost:8006",
+    "endpoints": "/health,/health/test,/ready,/users,/roles",
+}
 API_DEFAULTS = {
     "bolt": BOLT_DEFAULTS,
     "drf": DRF_DEFAULTS,
     "fastapi": FASTAPI_DEFAULTS,
     "express": EXPRESS_DEFAULTS,
     "nest": NEST_DEFAULTS,
+    "go": GO_DEFAULTS,
+    "rust": RUST_DEFAULTS,
 }
 
 
@@ -198,9 +214,9 @@ def main():
     parser.add_argument(
         "-a",
         "--api",
-        choices=["bolt", "drf", "fastapi", "express", "nest"],
+        choices=["bolt", "drf", "fastapi", "express", "nest", "go", "rust"],
         default="bolt",
-        help="API type (bolt, drf, fastapi, express, nest)",
+        help="API type (bolt, drf, fastapi, express, nest, go, rust)",
     )
     parser.add_argument(
         "-u",

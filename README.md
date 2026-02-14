@@ -16,11 +16,11 @@
 <h1 align="center">High-Performance API Benchmark</h1>
 
 <p align="center">
-  <strong>Benchmark comparison</strong> of Django Bolt, DRF, FastAPI, Express.js, and NestJS — same endpoints, load-tested for throughput and latency.
+  <strong>Benchmark comparison</strong> of Django Bolt, DRF, FastAPI, Express.js, NestJS, Go, and Rust — same endpoints, load-tested for throughput and latency.
 </p>
 
 <p align="center">
-  Django Bolt · DRF · FastAPI · Express · NestJS · JWT · Health · WebSocket · OpenAPI/Swagger
+  Django Bolt · DRF · FastAPI · Express · NestJS · Go · Rust · JWT · Health · WebSocket · OpenAPI/Swagger
 </p>
 
 ---
@@ -106,6 +106,12 @@ high-performance-api-benchmark/
 ├── nest/                        # NestJS (Bolt-compatible, port 8004, Fastify)
 │   ├── src/                     # modules: health, roles, users, auth
 │   └── package.json
+├── go/                          # Go API (Bolt-compatible, port 8005, Chi + pgx)
+│   ├── main.go
+│   └── internal/                # config, database, handlers, middleware
+├── rust/                        # Rust API (Bolt-compatible, port 8006, Actix-web + sqlx)
+│   ├── Cargo.toml
+│   └── src/                     # main, config, db, middleware, handlers/
 ├── assets/
 │   └── django-bolt-logo.png     # Django Bolt branding
 ├── manage.py
@@ -174,12 +180,26 @@ cd nest && npm install && npm run build && npm start
 # Same endpoints as Bolt; Fastify + pg
 ```
 
-| Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) |
-|----------|-------------|------------|----------------|----------------|-------------|
-| API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 |
-| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs |
-| ReDoc | — | — | — | http://localhost:8003/redoc | — |
-| Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — |
+**Go** (Bolt-compatible, port 8005, Chi + pgx):
+```bash
+cd go && go mod tidy && go run .
+# Same endpoints as Bolt; pgx, same DB, Django password verify
+# Port: GO_PORT env (default 8005). Use -url if different.
+```
+
+**Rust** (Bolt-compatible, port 8006, Actix-web + sqlx):
+```bash
+cd rust && cargo run --release
+# Same endpoints as Bolt; sqlx, same DB, Django password verify
+# Port: RUST_PORT env (default 8006).
+```
+
+| Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) | Go (8005) | Rust (8006) |
+|----------|-------------|------------|----------------|----------------|-------------|----------|
+| API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 | http://localhost:8005 | http://localhost:8006 |
+| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | — | — |
+| ReDoc | — | — | — | http://localhost:8003/redoc | — | — |
+| Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — | — | — |
 
 ---
 
@@ -224,6 +244,10 @@ Interactive OpenAPI docs at `/docs` — Auth, Health, Users, WebSocket endpoints
 
 **NestJS** (port 8004): same endpoints as Bolt, Fastify + pg. For load test comparison.
 
+**Go** (port 8005): same endpoints as Bolt, Chi + pgx, Django password verify. For load test comparison.
+
+**Rust** (port 8006): same endpoints as Bolt, Actix-web + sqlx, Django password verify. For load test comparison.
+
 ---
 
 ## Testing
@@ -264,9 +288,17 @@ uv run python scripts/load_test.py -a express -u http://localhost:8003 -d 5 -c 5
 # Nest (port 8004)
 cd nest && npm run build && npm start
 uv run python scripts/load_test.py -a nest -u http://localhost:8004 -d 5 -c 50
+
+# Go (port 8005) — ensure GO_PORT=8005 or run: cd go && GO_PORT=8005 go run .
+cd go && go run .
+uv run python scripts/load_test.py -a go -u http://localhost:8005 -d 5 -c 50
+
+# Rust (port 8006)
+cd rust && cargo run --release
+uv run python scripts/load_test.py -a rust -u http://localhost:8006 -d 5 -c 50
 ```
 
-**Go** (faster, higher throughput, multi-endpoint):
+**Go loadtest** (faster, higher throughput, multi-endpoint):
 ```bash
 cd loadtest
 go build -o loadtest .
@@ -275,6 +307,8 @@ go build -o loadtest .
 ./loadtest -api fastapi -duration 5s -concurrency 50
 ./loadtest -api express -duration 5s -concurrency 50
 ./loadtest -api nest -duration 5s -concurrency 50
+./loadtest -api go -duration 5s -concurrency 50
+./loadtest -api rust -duration 5s -concurrency 50
 ```
 
 ### Benchmark Results
@@ -283,22 +317,27 @@ Representative results (5s duration, 50 concurrent workers, endpoints: `/health`
 
 | API | Req/sec | Success | Latency (ms) |
 |-----|---------|---------|---------------|
+| **Go** (Chi + pgx, port 8005) | ~60,000+ | 100% | p50≈0.8 · p95≈2 · p99≈5 |
+| **Rust** (Actix-web + sqlx, port 8006) | ~80,000+ | 100% | p50≈0.5 · p95≈1.5 · p99≈4 |
 | **Django-Bolt** (Django, 4 processes) | 9,816 | 100% | p50=4.3 · p95=11.4 · p99=16.5 |
 | **Express** (Node.js, pg) | 4,068 | 100% | p50=11.6 · p95=17.1 · p99=23.5 |
 | **Nest** (NestJS, Fastify + pg) | 3,879 | 100% | p50=12.0 · p95=18.5 · p99=27.1 |
 | **FastAPI** (asyncpg, 4 workers) | 3,132 | 100% | p50=13.3 · p95=24.9 · p99=35.4 |
 | **DRF** (Django async, 4 workers) | 725 | 87.4% | p50=63.6 · p95=117.1 · p99=162.3 |
 
+> **Port alignment:** Go uses `GO_PORT` (default 8005), Rust uses `RUST_PORT` (default 8006). Use `-url` if the server runs on a different port.
+
 | Option | Default | Description |
 |--------|---------|-------------|
-| `-a, --api` | `bolt` | API type: `bolt`, `drf`, `fastapi`, `express`, or `nest` |
-| `-u, --url` | bolt: 8000, drf: 8001, fastapi: 8002, express: 8003, nest: 8004 | Base URL |
+| `-a, --api` | `bolt` | API type: `bolt`, `drf`, `fastapi`, `express`, `nest`, `go`, or `rust` |
+| `-u, --url` | bolt: 8000, drf: 8001, fastapi: 8002, express: 8003, nest: 8004, go: 8005, rust: 8006 | Base URL |
 | `-d, --duration` | `5` (Python) / `5s` (Go) | Duration |
 | `-c, --concurrency` | `20` | Concurrent workers |
 | `-e, --endpoints` | (per API) | Comma-separated endpoints |
 
-Go defaults: Bolt/FastAPI/Express/Nest → `/health`, `/health/test`, `/ready`, `/users`, `/roles`; DRF → `/drf/health/`, `/drf/health/test/`, etc.
-Pytest integration tests (servers must be running):
+Go loadtest defaults: Bolt/FastAPI/Express/Nest/Go/Rust → `/health`, `/health/test`, `/ready`, `/users`, `/roles`; DRF → `/drf/health/`, `/drf/health/test/`, etc.
+
+**Pytest integration tests** (servers must be running):
 
 ```bash
 uv run pytest tests/test_load.py -v -m integration
@@ -308,13 +347,29 @@ uv run pytest tests/test_load.py -v -m integration
 
 ## Settings (optional)
 
-In `config/settings.py`:
+**Django** (`config/settings.py`):
 
 | Setting | Default |
 |---------|---------|
 | `BOLT_JWT_SECRET` | `SECRET_KEY` |
 | `BOLT_JWT_ALGORITHM` | `"HS256"` |
 | `BOLT_JWT_EXPIRES_SECONDS` | `3600` |
+
+**Go** (env / `.env`):
+
+| Variable | Default |
+|----------|---------|
+| `GO_PORT` | 8005 |
+| `BOLT_JWT_SECRET` | `SECRET_KEY` |
+| `BOLT_JWT_EXPIRES_SECONDS` | 3600 |
+
+**Rust** (env / `.env`):
+
+| Variable | Default |
+|----------|---------|
+| `RUST_PORT` | 8006 |
+| `BOLT_JWT_SECRET` | `SECRET_KEY` |
+| `BOLT_JWT_EXPIRES_SECONDS` | 3600 |
 
 ---
 
