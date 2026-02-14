@@ -1,5 +1,6 @@
 <p align="center">
   <a href="https://www.djangoproject.com/" target="_blank"><img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" height="26"/></a>
+  <a href="https://www.django-rest-framework.org/" target="_blank"><img src="https://img.shields.io/badge/DRF-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django REST Framework" height="26"/></a>
   <a href="https://github.com/FarhanAliRaza/django-bolt" target="_blank"><img src="https://img.shields.io/badge/Django__Bolt-0.5.x-0C4A6E?style=for-the-badge&logo=lightning&logoColor=white" alt="Django Bolt" height="26"/></a>
   <a href="https://fastapi.tiangolo.com/" target="_blank"><img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" height="26"/></a>
   <a href="https://expressjs.com/" target="_blank"><img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" height="26"/></a>
@@ -42,7 +43,7 @@
 | **WebSocket** | `WS /ws` echo (text + JSON) |
 | **Observability** | `X-Server-Time`, `X-Response-Time` (ms) on every response — all APIs |
 | **DRF** | Django REST Framework at `/drf/` (JWT via SimpleJWT, same endpoints as Bolt) |
-| **Docs** | OpenAPI/Swagger at `/docs` (JWT Authorize), Django Admin at `/admin/` |
+| **Docs** | OpenAPI/Swagger at `/docs` (Bolt), `/drf/schema/swagger-ui/` (DRF), Django Admin at `/admin/` |
 
 ---
 
@@ -159,9 +160,10 @@ uv run manage.py createsuperuser   # for admin & JWT login
 uv run manage.py runbolt --processes 4 --dev --host localhost --port 8000
 ```
 
-**DRF API** (sync, port 8001):
+**DRF API** (port 8001):
 ```bash
-uv run uvicorn config.asgi:application --workers 4 --port 8001
+uv run drf
+# or: uv run drf --port 8001 --workers 4
 ```
 
 **FastAPI** (Bolt-compatible, port 8002):
@@ -199,8 +201,8 @@ cd rust && cargo run --release
 | Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) | Go (8005) | Rust (8006) |
 |----------|-------------|------------|----------------|----------------|-------------|-----------|-------------|
 | API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 | http://localhost:8005 | http://localhost:8006 |
-| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | http://localhost:8005/swagger-ui/ | http://localhost:8006/swagger-ui/ |
-| ReDoc | — | — | — | http://localhost:8003/redoc | — | — | — |
+| Swagger | http://localhost:8000/docs | http://localhost:8001/drf/schema/swagger-ui/ | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | http://localhost:8005/swagger-ui/ | http://localhost:8006/swagger-ui/ |
+| ReDoc | http://localhost:8000/redoc | http://localhost:8001/drf/schema/redoc/ | http://localhost:8002/redoc | http://localhost:8003/redoc | — | — | — |
 | Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — | — | — |
 
 ---
@@ -212,6 +214,7 @@ All implementations expose interactive OpenAPI docs. Every response includes **X
 | API | Swagger UI |
 |-----|------------|
 | Bolt | http://localhost:8000/docs |
+| **DRF** | http://localhost:8001/drf/schema/swagger-ui/ |
 | FastAPI | http://localhost:8002/docs |
 | Express | http://localhost:8003/docs |
 | Nest | http://localhost:8004/docs |
@@ -267,11 +270,15 @@ Tests are written with **[pytest](https://pytest.org/)** (unit and integration).
 
 | Type | Command | Notes |
 |------|---------|--------|
-| **Unit** | `uv run pytest tests/test_schemas.py -v` | No server; schemas only |
-| **Integration** | `uv run pytest tests/ -v -m integration` | Start server first |
-| **All** | `uv run pytest tests/ -v` | Unit runs; integration skips if server down |
+| **Unit** | `uv run test tests/test_schemas.py -v` | No server; schemas only |
+| **All** | `uv run test tests/ -v` | Unit runs; integration skips if server down |
+| **SQLite** | `uv run test --sqlite tests/ -v` | Use SQLite when PostgreSQL has collation errors |
 
-**Stack:** pytest, pytest-django, pytest-asyncio, httpx, websockets. Install dev deps: `uv sync --extra dev`.
+**PostgreSQL collation error?** If tests fail with `template database "template1" has a collation version mismatch`, either:
+- Run with SQLite: `uv run test --sqlite tests/ -v`
+- Or fix PostgreSQL: `sudo -u postgres psql -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;"`
+
+**Stack:** pytest, pytest-django, pytest-asyncio, httpx, websockets.
 
 ---
 
@@ -285,7 +292,7 @@ uv run manage.py runbolt --dev --host localhost --port 8000
 uv run python scripts/load_test.py -a bolt -d 5 -c 50
 
 # DRF (port 8001)
-uv run manage.py runserver 8001
+uv run drf
 uv run python scripts/load_test.py -a drf -u http://localhost:8001 -d 5 -c 50
 
 # FastAPI (port 8002)
@@ -331,8 +338,8 @@ Representative results (5s duration, 50 concurrent workers, endpoints: `/health`
 | **Go** (Chi + pgx, port 8005) | ~60,000+ | 100% | p50≈0.8 · p95≈2 · p99≈5 |
 | **Rust** (Actix-web + sqlx, port 8006) | ~14,000+ | 100% | p50≈2.7 · p95≈7 · p99≈18 |
 | **Django-Bolt** (Django, 4 processes) | 9,816 | 100% | p50=4.3 · p95=11.4 · p99=16.5 |
-| **Express** (Node.js, pg) | 4,068 | 100% | p50=11.6 · p95=17.1 · p99=23.5 |
-| **Nest** (NestJS, Fastify + pg) | 3,879 | 100% | p50=12.0 · p95=18.5 · p99=27.1 |
+| **Express** (Node.js, pg, 4 workers) | 4,068 | 100% | p50=11.6 · p95=17.1 · p99=23.5 |
+| **Nest** (NestJS, Fastify + pg,  4 workers) | 3,879 | 100% | p50=12.0 · p95=18.5 · p99=27.1 |
 | **FastAPI** (asyncpg, 4 workers) | 3,132 | 100% | p50=13.3 · p95=24.9 · p99=35.4 |
 | **DRF** (Django async, 4 workers) | 725 | 87.4% | p50=63.6 · p95=117.1 · p99=162.3 |
 
@@ -351,7 +358,7 @@ Go loadtest defaults: Bolt/FastAPI/Express/Nest/Go/Rust → `/health`, `/health/
 **Pytest integration tests** (servers must be running):
 
 ```bash
-uv run pytest tests/test_load.py -v -m integration
+uv run test tests/test_load.py -v -m integration
 ```
 
 ---

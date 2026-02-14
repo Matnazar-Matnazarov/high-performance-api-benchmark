@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "drf_spectacular",
     "adrf",
     "django_bolt",
     "accounts",
@@ -145,6 +146,7 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Django REST Framework (async via adrf)
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "api_drf.auth.BoltJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -154,6 +156,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
     "DEFAULT_FILTER_BACKENDS": ("rest_framework.filters.SearchFilter",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+}
+
+# drf-spectacular (OpenAPI / Swagger)
+SPECTACULAR_SETTINGS = {
+    "TITLE": "DRF API — High-Performance Benchmark",
+    "DESCRIPTION": "Django REST Framework API with Bolt-compatible endpoints: health, auth, roles, users. JWT via SimpleJWT and Bolt-style tokens.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 # Simple JWT (DRF)

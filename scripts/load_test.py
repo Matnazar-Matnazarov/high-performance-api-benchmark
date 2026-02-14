@@ -5,7 +5,7 @@ Load test script for API endpoints.
 Measures: req/sec, success count, fail count, success rate.
 
 Bolt (runbolt): uv run manage.py runbolt --dev --host localhost --port 8000
-DRF (uvicorn): uv run uvicorn config.asgi:application --port 8001
+DRF: uv run drf --port 8001
 FastAPI (uvicorn): uv run uvicorn src.main:app --port 8002
 Express: cd express && npm start (port 8003)
 Nest: cd nest && npm start (port 8004)
