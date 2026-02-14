@@ -8,9 +8,15 @@ High-performance load test for **Django Bolt**, **DRF**, **FastAPI**, **Express.
 
 ## Build
 
+From project root:
 ```bash
 cd loadtest
 go mod tidy
+go build -o loadtest .
+```
+
+Or if already in `loadtest/`:
+```bash
 go build -o loadtest .
 ```
 
@@ -29,6 +35,18 @@ go build -o loadtest .
 **Custom URL** (if server runs on different port):
 ```bash
 ./loadtest -api go -url http://localhost:8003 -duration 5s -concurrency 50
+```
+
+**Express.js** (port 8003):
+
+```bash
+./loadtest -api express -duration 5s -concurrency 50
+```
+
+**NestJS** (port 8004):
+
+```bash
+./loadtest -api nest -duration 5s -concurrency 50
 ```
 
 **Custom endpoints:**

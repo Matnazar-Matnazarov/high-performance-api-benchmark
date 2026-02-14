@@ -195,10 +195,10 @@ cd rust && cargo run --release
 ```
 
 | Resource | Bolt (8000) | DRF (8001) | FastAPI (8002) | Express (8003) | Nest (8004) | Go (8005) | Rust (8006) |
-|----------|-------------|------------|----------------|----------------|-------------|----------|
+|----------|-------------|------------|----------------|----------------|-------------|-----------|-------------|
 | API | http://localhost:8000 | http://localhost:8001/drf/ | http://localhost:8002 | http://localhost:8003 | http://localhost:8004 | http://localhost:8005 | http://localhost:8006 |
-| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | — | — |
-| ReDoc | — | — | — | http://localhost:8003/redoc | — | — |
+| Swagger | http://localhost:8000/docs | — | http://localhost:8002/docs | http://localhost:8003/docs | http://localhost:8004/docs | — | http://localhost:8006/swagger-ui/ |
+| ReDoc | — | — | — | http://localhost:8003/redoc | — | — | — |
 | Admin | http://localhost:8000/admin/ | http://localhost:8001/admin/ | — | — | — | — | — |
 
 ---
@@ -289,7 +289,7 @@ uv run python scripts/load_test.py -a express -u http://localhost:8003 -d 5 -c 5
 cd nest && npm run build && npm start
 uv run python scripts/load_test.py -a nest -u http://localhost:8004 -d 5 -c 50
 
-# Go (port 8005) — ensure GO_PORT=8005 or run: cd go && GO_PORT=8005 go run .
+# Go (port 8005)
 cd go && go run .
 uv run python scripts/load_test.py -a go -u http://localhost:8005 -d 5 -c 50
 
@@ -318,7 +318,7 @@ Representative results (5s duration, 50 concurrent workers, endpoints: `/health`
 | API | Req/sec | Success | Latency (ms) |
 |-----|---------|---------|---------------|
 | **Go** (Chi + pgx, port 8005) | ~60,000+ | 100% | p50≈0.8 · p95≈2 · p99≈5 |
-| **Rust** (Actix-web + sqlx, port 8006) | ~80,000+ | 100% | p50≈0.5 · p95≈1.5 · p99≈4 |
+| **Rust** (Actix-web + sqlx, port 8006) | ~14,000+ | 100% | p50≈2.7 · p95≈7 · p99≈18 |
 | **Django-Bolt** (Django, 4 processes) | 9,816 | 100% | p50=4.3 · p95=11.4 · p99=16.5 |
 | **Express** (Node.js, pg) | 4,068 | 100% | p50=11.6 · p95=17.1 · p99=23.5 |
 | **Nest** (NestJS, Fastify + pg) | 3,879 | 100% | p50=12.0 · p95=18.5 · p99=27.1 |
