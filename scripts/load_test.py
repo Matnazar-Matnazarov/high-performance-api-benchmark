@@ -7,11 +7,13 @@ Measures: req/sec, success count, fail count, success rate.
 Bolt (runbolt): uv run manage.py runbolt --dev --host localhost --port 8000
 DRF (uvicorn): uv run uvicorn config.asgi:application --port 8001
 FastAPI (uvicorn): uv run uvicorn src.main:app --port 8002
+Express: cd express && npm start (port 8003)
 
 Usage:
     uv run python scripts/load_test.py --api bolt
     uv run python scripts/load_test.py --api drf -u http://localhost:8001
     uv run python scripts/load_test.py --api fastapi -u http://localhost:8002
+    uv run python scripts/load_test.py --api express -u http://localhost:8003
 """
 
 import argparse
@@ -172,10 +174,20 @@ FASTAPI_DEFAULTS = {
     "url": "http://localhost:8002",
     "endpoints": "/health,/health/test,/ready,/users,/roles",
 }
+EXPRESS_DEFAULTS = {
+    "url": "http://localhost:8003",
+    "endpoints": "/health,/health/test,/ready,/users,/roles",
+}
+NEST_DEFAULTS = {
+    "url": "http://localhost:8004",
+    "endpoints": "/health,/health/test,/ready,/users,/roles",
+}
 API_DEFAULTS = {
     "bolt": BOLT_DEFAULTS,
     "drf": DRF_DEFAULTS,
     "fastapi": FASTAPI_DEFAULTS,
+    "express": EXPRESS_DEFAULTS,
+    "nest": NEST_DEFAULTS,
 }
 
 
@@ -186,9 +198,9 @@ def main():
     parser.add_argument(
         "-a",
         "--api",
-        choices=["bolt", "drf", "fastapi"],
+        choices=["bolt", "drf", "fastapi", "express", "nest"],
         default="bolt",
-        help="API type (bolt, drf, fastapi)",
+        help="API type (bolt, drf, fastapi, express, nest)",
     )
     parser.add_argument(
         "-u",
