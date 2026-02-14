@@ -4,16 +4,25 @@ Pytest configuration and fixtures.
 Uses django_bolt's sync TestClient so the request handler runs in the same
 thread as the test; then pytest-django's db fixture allows database access.
 No live server; no skips.
+
+Set USE_SQLITE_FOR_TESTS=1 to use SQLite when PostgreSQL has collation issues:
+  USE_SQLITE_FOR_TESTS=1 uv run test
 """
 
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Set before any django import — SQLite fallback for PostgreSQL collation errors
+if os.environ.get("USE_SQLITE_FOR_TESTS"):
+    os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings_test"
+else:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+
 import django
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 

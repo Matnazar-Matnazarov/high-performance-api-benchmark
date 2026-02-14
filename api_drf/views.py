@@ -4,6 +4,10 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import connection
+from rest_framework import serializers as rf_serializers
+
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from drf_spectacular.types import OpenApiTypes
 from rest_framework import permissions, status
 from rest_framework.decorators import action, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -26,6 +30,17 @@ VALID_ROLES = {Role.ADMIN, Role.SHOPKEEPER, Role.CUSTOMER}
 # ----- Health (async) -----
 
 
+@extend_schema(
+    tags=["Health"],
+    summary="Liveness probe",
+    description="Returns service liveness status. Used by orchestrators (e.g. Kubernetes) to verify the process is running.",
+    responses={
+        200: {
+            "type": "object",
+            "properties": {"status": {"type": "string", "example": "ok"}},
+        }
+    },
+)
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 async def health_view(request):
@@ -33,6 +48,20 @@ async def health_view(request):
     return Response({"status": "ok"})
 
 
+@extend_schema(
+    tags=["Health"],
+    summary="Custom health check",
+    description="Extended health check endpoint returning status and a custom message.",
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string", "example": "ok"},
+                "message": {"type": "string", "example": "Test health check endpoint"},
+            },
+        }
+    },
+)
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 async def health_test_view(request):
@@ -40,6 +69,33 @@ async def health_test_view(request):
     return Response({"status": "ok", "message": "Test health check endpoint"})
 
 
+@extend_schema(
+    tags=["Health"],
+    summary="Readiness probe",
+    description="Returns service readiness status. Verifies database connectivity. Returns 503 if DB is unreachable.",
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string", "example": "healthy"},
+                "checks": {
+                    "type": "object",
+                    "properties": {"database": {"type": "string", "example": "ok"}},
+                },
+            },
+        },
+        503: {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string", "example": "unhealthy"},
+                "checks": {
+                    "type": "object",
+                    "properties": {"database": {"type": "string", "example": "error"}},
+                },
+            },
+        },
+    },
+)
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 async def ready_view(request):
@@ -57,6 +113,20 @@ async def ready_view(request):
 # ----- Roles (async) -----
 
 
+@extend_schema(
+    tags=["Roles"],
+    summary="List all roles",
+    description="Returns the list of available user roles (ADMIN, SHOPKEEPER, CUSTOMER).",
+    responses={
+        200: {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"code": {"type": "string"}, "name": {"type": "string"}},
+            },
+        }
+    },
+)
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 async def role_list_view(request):
@@ -64,6 +134,26 @@ async def role_list_view(request):
     return Response([{"code": c, "name": n} for c, n in Role.choices])
 
 
+@extend_schema(
+    tags=["Roles"],
+    summary="Get role by code",
+    description="Returns a single role by its code (e.g. ADMIN, SHOPKEEPER, CUSTOMER).",
+    parameters=[
+        OpenApiParameter(
+            "code", OpenApiTypes.STR, OpenApiParameter.PATH, description="Role code"
+        )
+    ],
+    responses={
+        200: {
+            "type": "object",
+            "properties": {"code": {"type": "string"}, "name": {"type": "string"}},
+        },
+        404: {
+            "type": "object",
+            "properties": {"detail": {"type": "string", "example": "Role not found"}},
+        },
+    },
+)
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 async def role_detail_view(request, code):
@@ -78,6 +168,41 @@ async def role_detail_view(request, code):
 # ----- Auth: Bolt-compatible login (access_token format) -----
 
 
+LoginRequestSerializer = inline_serializer(
+    name="LoginRequest",
+    fields={
+        "username": rf_serializers.CharField(help_text="Username"),
+        "password": rf_serializers.CharField(
+            help_text="Password", style={"input_type": "password"}
+        ),
+    },
+)
+
+LoginResponseSerializer = inline_serializer(
+    name="LoginResponse",
+    fields={
+        "access_token": rf_serializers.CharField(help_text="JWT access token"),
+        "expires_in": rf_serializers.IntegerField(help_text="Token expiry in seconds"),
+        "token_type": rf_serializers.CharField(help_text="Bearer"),
+    },
+)
+
+
+@extend_schema(
+    tags=["Auth"],
+    summary="Login (Bolt-style JWT)",
+    description="Authenticate with username and password. Returns Bolt-compatible JWT (access_token, expires_in, token_type). Use the token in Authorization: Bearer <access_token>.",
+    request=LoginRequestSerializer,
+    responses={
+        200: LoginResponseSerializer,
+        401: {
+            "type": "object",
+            "properties": {
+                "detail": {"type": "string", "example": "Invalid credentials"}
+            },
+        },
+    },
+)
 class BoltLoginView(AsyncAPIView):
     """POST /auth/login - Bolt-compatible JWT (access_token, expires_in, token_type)."""
 
@@ -124,6 +249,7 @@ class UserPagination(PageNumberPagination):
 class UserViewSet(ViewSet):
     """Async user endpoints: list, retrieve, create, me."""
 
+    serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = UserPagination
 
@@ -154,6 +280,38 @@ class UserViewSet(ViewSet):
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
+    @extend_schema(
+        tags=["Users"],
+        summary="List users",
+        description="Paginated list of users. Supports ?search= and ?role= / ?role_code= filters.",
+        parameters=[
+            OpenApiParameter(
+                "page",
+                OpenApiTypes.INT,
+                OpenApiParameter.QUERY,
+                description="Page number",
+            ),
+            OpenApiParameter(
+                "page_size",
+                OpenApiTypes.INT,
+                OpenApiParameter.QUERY,
+                description="Items per page",
+            ),
+            OpenApiParameter(
+                "search",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description="Filter by username",
+            ),
+            OpenApiParameter(
+                "role",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description="Filter by role (ADMIN, SHOPKEEPER, CUSTOMER)",
+            ),
+        ],
+        responses={200: UserSerializer(many=True)},
+    )
     async def alist(self, request):
         """GET /users - paginated list with search and role filter."""
         qs = self.get_queryset()
@@ -168,6 +326,20 @@ class UserViewSet(ViewSet):
         data = await sync_to_async(lambda: serializer.data)()
         return Response(data)
 
+    @extend_schema(
+        tags=["Users"],
+        summary="Get user by ID",
+        description="Returns a single user by primary key.",
+        responses={
+            200: UserSerializer,
+            404: {
+                "type": "object",
+                "properties": {
+                    "detail": {"type": "string", "example": "User not found"}
+                },
+            },
+        },
+    )
     async def aretrieve(self, request, pk=None):
         """GET /users/{id} - get user by ID."""
         user = await User.objects.filter(pk=pk).only("id", "username", "role").afirst()
@@ -180,6 +352,13 @@ class UserViewSet(ViewSet):
         data = await sync_to_async(lambda: serializer.data)()
         return Response(data)
 
+    @extend_schema(
+        tags=["Users"],
+        summary="Create user",
+        description="Create a new user. Requires staff/admin authentication.",
+        request=UserCreateSerializer,
+        responses={201: UserSerializer},
+    )
     async def acreate(self, request):
         """POST /users - create user (staff only)."""
         serializer = UserCreateSerializer(data=request.data)
@@ -189,6 +368,12 @@ class UserViewSet(ViewSet):
         data = await sync_to_async(lambda: out.data)()
         return Response(data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(
+        tags=["Users"],
+        summary="Current user",
+        description="Returns the authenticated user's profile. Requires JWT.",
+        responses={200: UserSerializer},
+    )
     @action(
         detail=False,
         methods=["get"],
